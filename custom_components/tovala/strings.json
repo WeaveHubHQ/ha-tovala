@@ -1,0 +1,10 @@
+{
+  "title": "Tovala",
+  "config": {
+    "step": { "user": { "title": "Sign in", "description": "Enter your Tovala credentials." } },
+    "error": {
+      "auth": "Login failed. Check email/password.",
+      "no_ovens_found": "Logged in but no ovens were found."
+    }
+  }
+}

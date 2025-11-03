@@ -1,0 +1,70 @@
+# ---------------------------------------------------------
+# Home Assistant / HACS custom integration gitignore
+# ---------------------------------------------------------
+
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*.so
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+*.log
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+desktop.ini
+
+# IDE / Editor metadata
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.iml
+
+# Test / coverage
+.coverage
+.tox/
+.nox/
+.cache/
+pytest_cache/
+coverage.xml
+htmlcov/
+
+# Build / packaging
+build/
+dist/
+*.tar.gz
+*.zip
+
+# Home Assistant development
+home-assistant.log
+home-assistant_v2.db*
+*.db-shm
+*.db-wal
+*.yaml.backup
+config/.storage/
+deps/
+
+# Miscellaneous
+*.bak
+*.tmp
+*.swp
+*.swo
+*.orig
+
+# Node / frontend (in case you add UI elements later)
+node_modules/
+package-lock.json
+yarn.lock

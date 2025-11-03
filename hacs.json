@@ -1,0 +1,6 @@
+{
+  "name": "Tovala Smart Oven",
+  "domains": ["tovala"],
+  "country": "US",
+  "render_readme": true
+}
