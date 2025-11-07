@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Optional, Sequence
 from aiohttp import ClientSession, ClientError, ClientTimeout
 import time
 import logging
+import json
+import base64
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,10 +39,45 @@ class TovalaClient:
         self._token_exp = 0
         self._bases: Sequence[str] = api_bases or DEFAULT_BASES
         self._base: Optional[str] = None  # set on successful login
+        self._user_id: Optional[int] = None  # extracted from JWT token
 
     @property
     def base_url(self) -> Optional[str]:
         return self._base
+
+    @property
+    def user_id(self) -> Optional[int]:
+        return self._user_id
+
+    def _decode_jwt_user_id(self, token: str) -> Optional[int]:
+        """Extract userId from JWT token payload without verification."""
+        try:
+            # JWT format: header.payload.signature
+            parts = token.split('.')
+            if len(parts) != 3:
+                _LOGGER.warning("Invalid JWT format")
+                return None
+
+            # Decode payload (add padding if needed)
+            payload = parts[1]
+            # Add padding to make it a multiple of 4
+            padding = len(payload) % 4
+            if padding:
+                payload += '=' * (4 - padding)
+
+            decoded = base64.urlsafe_b64decode(payload)
+            data = json.loads(decoded)
+            user_id = data.get("userId")
+
+            if user_id:
+                _LOGGER.debug("Extracted userId %s from JWT", user_id)
+                return int(user_id)
+            else:
+                _LOGGER.warning("No userId field in JWT payload")
+                return None
+        except Exception as e:
+            _LOGGER.error("Failed to decode JWT: %s", e, exc_info=True)
+            return None
 
     async def login(self) -> None:
         """Ensure we have a valid bearer token. Tries beta then prod."""
@@ -70,7 +107,7 @@ class TovalaClient:
             "User-Agent": "HomeAssistant-Tovala/0.1",
             "Origin": "https://my.tovala.com",
             "Referer": "https://my.tovala.com/",
-            "X-Tovala-AppID": "MyTovala",
+            "X-Tovala-AppID": "MAPP",
         }
 
         last_err: Optional[Exception] = None
@@ -117,7 +154,13 @@ class TovalaClient:
                 self._token = token
                 self._token_exp = int(time.time()) + int(data.get("expiresIn", 3600))
                 self._base = base
-                _LOGGER.info("Successfully logged in to %s", base)
+
+                # Extract userId from JWT token
+                self._user_id = self._decode_jwt_user_id(token)
+                if not self._user_id:
+                    _LOGGER.warning("Could not extract userId from token")
+
+                _LOGGER.info("Successfully logged in to %s (userId: %s)", base, self._user_id)
                 return
                 
             except TovalaAuthError:
@@ -145,7 +188,7 @@ class TovalaClient:
         await self.login()
         return {
             "Authorization": f"Bearer {self._token}",
-            "X-Tovala-AppID": "MyTovala",
+            "X-Tovala-AppID": "MAPP",
         }
 
     async def _get_json(self, path: str, **fmt) -> Any:
@@ -176,69 +219,46 @@ class TovalaClient:
             _LOGGER.error("Connection error for %s: %s", url, str(e))
             raise TovalaApiError(f"Connection failed: {str(e)}")
 
-    # ---- Stubs until we confirm the read endpoints from the app traffic ----
-    OVENS_LIST_CANDIDATES: Sequence[str] = (
-        "/v0/ovens",
-        "/v0/devices/ovens",
-        "/v0/user/ovens",
-        "/v0/devices",  # Added - might return all devices including ovens
-    )
-    
-    OVEN_STATUS_CANDIDATES: Sequence[str] = (
-        "/v0/ovens/{oven_id}/status",
-        "/v0/ovens/{oven_id}",
-        "/v0/devices/ovens/{oven_id}/status",
-        "/v0/devices/{oven_id}/status",
-        "/v0/devices/{oven_id}",
-    )
-
     async def list_ovens(self) -> List[Dict[str, Any]]:
-        """Try a few candidate endpoints to find user's ovens."""
-        _LOGGER.debug("Attempting to list ovens")
-        
-        for path in self.OVENS_LIST_CANDIDATES:
-            try:
-                data = await self._get_json(path)
-                _LOGGER.debug("Ovens endpoint %s returned: %s", path, data)
-                
-                if isinstance(data, dict) and "ovens" in data:
-                    data = data["ovens"]
-                if isinstance(data, list):
-                    _LOGGER.info("Found %d ovens using endpoint %s", len(data), path)
-                    return data
-            except TovalaApiError as e:
-                if str(e) == "not_found":
-                    _LOGGER.debug("Endpoint %s not found, trying next", path)
-                    continue
-                _LOGGER.warning("Error fetching from %s: %s", path, e)
-                continue
-            except Exception as e:
-                _LOGGER.warning("Unexpected error for %s: %s", path, e)
-                continue
-                
-        raise TovalaApiError("Could not find an ovens endpoint in v0 API")
+        """Get user's ovens list."""
+        if not self._user_id:
+            raise TovalaApiError("No user_id available - login first")
+
+        _LOGGER.debug("Fetching ovens for user %s", self._user_id)
+
+        try:
+            path = f"/v0/users/{self._user_id}/ovens"
+            data = await self._get_json(path)
+            _LOGGER.debug("Ovens endpoint returned: %s", data)
+
+            if isinstance(data, list):
+                _LOGGER.info("Found %d ovens", len(data))
+                if data:
+                    _LOGGER.debug("First oven object keys: %s", list(data[0].keys()) if data[0] else "empty")
+                return data
+            else:
+                _LOGGER.warning("Unexpected ovens response format: %s", type(data))
+                return []
+        except Exception as e:
+            _LOGGER.error("Failed to list ovens: %s", e, exc_info=True)
+            raise TovalaApiError(f"Failed to list ovens: {str(e)}")
 
     async def oven_status(self, oven_id: str) -> Dict[str, Any]:
-        """Try a few candidate endpoints to fetch oven status."""
+        """Fetch oven cooking status."""
         if not oven_id:
             _LOGGER.warning("oven_status called with empty oven_id")
             return {}
-            
-        _LOGGER.debug("Fetching status for oven %s", oven_id)
-        
-        for path in self.OVEN_STATUS_CANDIDATES:
-            try:
-                data = await self._get_json(path, oven_id=oven_id)
-                _LOGGER.debug("Status endpoint %s returned: %s", path, data)
-                return data
-            except TovalaApiError as e:
-                if str(e) == "not_found":
-                    _LOGGER.debug("Endpoint %s not found, trying next", path)
-                    continue
-                _LOGGER.warning("Error fetching from %s: %s", path, e)
-                continue
-            except Exception as e:
-                _LOGGER.warning("Unexpected error for %s: %s", path, e)
-                continue
-                
-        raise TovalaApiError("Could not read oven status from any known endpoint")
+
+        if not self._user_id:
+            raise TovalaApiError("No user_id available - login first")
+
+        _LOGGER.debug("Fetching status for oven %s (user %s)", oven_id, self._user_id)
+
+        try:
+            path = f"/v0/users/{self._user_id}/ovens/{oven_id}/cook/status"
+            data = await self._get_json(path)
+            _LOGGER.debug("Status endpoint returned: %s", data)
+            return data
+        except Exception as e:
+            _LOGGER.error("Failed to fetch oven status: %s", e, exc_info=True)
+            raise TovalaApiError(f"Failed to fetch oven status: {str(e)}")
