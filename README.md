@@ -29,9 +29,9 @@ A **Home Assistant custom integration** that connects to Tovala Smart Ovens via 
 
 ## 📦 Installation
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=InfoSecured&repository=ha-tovala)
-
 ### HACS (Recommended)
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=InfoSecured&repository=ha-tovala)
 
 1. Open **HACS → Integrations → ⋮ → Custom repositories**
 2. Add repository URL: `https://github.com/InfoSecured/ha-tovala`
