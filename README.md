@@ -243,6 +243,8 @@ Manual cooking modes (like "manual-mini-toast-4" or "Bake at 400°") won't have 
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+Come see our other apps and integrations at [WeaveHub](https://weavehub.app).
+
 ---
 
 ## 📜 License
