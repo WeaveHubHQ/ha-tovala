@@ -3,11 +3,11 @@
   "name": "Tovala Smart Oven",
   "codeowners": ["@jlazerus"],
   "config_flow": true,
-  "documentation": "https://github.com/InfoSecured/ha-tovala",
+  "documentation": "https://github.com/WeaveHubHQ/ha-tovala",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/InfoSecured/ha-tovala/issues",
+  "issue_tracker": "https://github.com/WeaveHubHQ/ha-tovala/issues",
   "loggers": ["custom_components.tovala"],
   "requirements": [],
-  "version": "1.0.1"
+  "version": "1.0.2"
 }

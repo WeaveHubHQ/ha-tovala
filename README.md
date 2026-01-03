@@ -5,9 +5,9 @@
 [![License][license-shield]](LICENSE)
 
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg
-[releases-shield]: https://img.shields.io/github/release/InfoSecured/ha-tovala.svg
-[releases]: https://github.com/InfoSecured/ha-tovala/releases
-[license-shield]: https://img.shields.io/github/license/InfoSecured/ha-tovala.svg
+[releases-shield]: https://img.shields.io/github/release/WeaveHubHQ/ha-tovala.svg
+[releases]: https://github.com/WeaveHubHQ/ha-tovala/releases
+[license-shield]: https://img.shields.io/github/license/WeaveHubHQ/ha-tovala.svg
 
 A **Home Assistant custom integration** that connects to Tovala Smart Ovens via their cloud API. Monitor cooking status, get meal details with images, track cooking history, and receive notifications when your food is ready!
 
@@ -31,10 +31,10 @@ A **Home Assistant custom integration** that connects to Tovala Smart Ovens via 
 
 ### HACS (Recommended)
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=InfoSecured&repository=ha-tovala)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=WeaveHubHQ&repository=ha-tovala)
 
 1. Open **HACS → Integrations → ⋮ → Custom repositories**
-2. Add repository URL: `https://github.com/InfoSecured/ha-tovala`
+2. Add repository URL: `https://github.com/WeaveHubHQ/ha-tovala`
 3. Category: **Integration**
 4. Click **Install**
 5. **Restart Home Assistant**
